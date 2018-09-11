@@ -1,0 +1,93 @@
+#app {
+	display: block;
+	width: 100vw;
+	height: 100vh;
+}
+
+.board {
+	display: block;
+	outline: 1px solid black;
+	width: 400px;
+	height: 400px;
+	position: relative;
+}
+
+.board.opponent {
+	width: 300px;
+	height: 300px;
+	margin: 10%;
+}
+
+.board:not(.opponent) {
+	margin: -10% 20% 10% 30.8%;
+}
+
+.board .square {
+	position: relative;
+	display: inline-block;
+	float: left;
+	-webkit-box-shadow: inset 0 0 1px black;
+	box-shadow: inset 0 0 1px black;
+}
+
+.board .square[data-active="active"] {
+	background: rgba(190,210,200, .5);
+}
+
+.board .square[data-save="saved"] {
+	background: rgba(190,210,255, .5);
+}
+
+.board [data-hit="true"] {
+	background: red;
+	pointer-events: none;
+}
+
+/* .board .square:hover {
+	-webkit-box-shadow: inset 0 0 5px rgb(0,255,0);
+	box-shadow: inset 0 0 5px rgb(0,255,0);
+} */
+
+.board .square:active {
+	background: rgb(100,255,200);
+	cursor: pointer;
+}
+/* .board .square:hover:before {
+	content: attr(data-coordinate);
+	text-transform: uppercase;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%,-50%);
+	-ms-transform: translate(-50%,-50%);
+	-o-transform: translate(-50%,-50%);
+	transform: translate(-50%,-50%);
+} */
+.board .legend {
+	position: absolute;
+	height: 100%;
+	width: 100%;
+}
+.board .legend .point {
+	display: block;
+	text-align: center;
+	line-height: 200%;
+	-webkit-box-shadow: inset 0 0 1px black;
+	box-shadow: inset 0 0 1px black;
+}
+.board .legend.axis-x {
+	top: -10%;
+}
+.board .legend.axis-x .point {
+	float: left;
+}
+.board .legend.axis-y {
+	top:  0;
+	left: -10%;
+}
+
+.ships {
+	position: absolute;
+	top: -90%;
+	left: 10%;
+}
