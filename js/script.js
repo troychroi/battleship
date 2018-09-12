@@ -59,8 +59,9 @@ class Board {
 		});
 		self.pointsInDOM.forEach((pointInDOM) => {
 			// name the event handler so you can remove it on click
+			var temporaryShipCoordinates = [];
 			pointInDOM.addEventListener('mouseenter', function(event) {
-				var temporaryShipCoordinates = [];
+					temporaryShipCoordinates = [];
 					if (self.matrixOrientation == self.matrixHorizontal) {
 						for (var i = 0;i < shipSizer;i++) {
 							var x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
@@ -68,11 +69,8 @@ class Board {
 							temporaryShipCoordinates.push([x,y]);
 						}
 						temporaryShipCoordinates.forEach((point) => {
-							console.log(point[0], point[1]);
-							if (self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+							if (event.target.hasAttribute('data-save') || self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
 								placementAllowed = false;
-							} else {
-								placementAllowed = true;
 							}
 						});
 					} else if (self.matrixOrientation == self.matrixVertical) {
@@ -82,10 +80,8 @@ class Board {
 							temporaryShipCoordinates.push([x,y]);
 						}
 						temporaryShipCoordinates.forEach((point) => {
-							if (self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+							if (event.target.hasAttribute('data-save') || self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
 								placementAllowed = false;
-							} else {
-								placementAllowed = true;
 							}
 						});
 					}
@@ -113,13 +109,24 @@ class Board {
 						var y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
 						self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').removeAttribute('data-active');
 					}
+					temporaryShipCoordinates.forEach((point) => {
+						if (!event.target.hasAttribute('data-save') && !self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+							placementAllowed = true;
+						}
+					});
 				} else if (self.matrixOrientation == self.matrixVertical) {
 					for (var i = 0;i < thisShip.value;i++) {
 						x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
 						y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
 						self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').removeAttribute('data-active');
 					}
+					temporaryShipCoordinates.forEach((point) => {
+						if (!event.target.hasAttribute('data-save') && !self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+							placementAllowed = true;
+						}
+					});
 				}
+				temporaryShipCoordinates = [];
 			});
 			pointInDOM.addEventListener('click', function(event) {
 				for (var i = 0;i < shipSizer;i++) {
