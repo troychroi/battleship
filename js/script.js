@@ -20,6 +20,7 @@ x don't allow a ship to place over another saved ship
 o don't allow a ship to straddle another ship either!
 x when the matrixOrientation is switched to vertical, the last column isn't allowed - fix this!
 x when the matrixOrientation is switched to horizontal, the last row takes on the hover, but the point and the siblings are also mirrored in the first row - fix this!
+ o perhaps the mouseenter event should be attached to the board, and not the individual squares
 
 */
 
@@ -32,42 +33,74 @@ class Board {
 		self = this;
 		self.gridmax = gridmaxglobal;
 		self.DOM = DOM;
-		self.shipsDOM = DOM.querySelectorAll('[name="ship"]');
-		self.shipFlipDOM = DOM.querySelector('#rotateship');
+		self.shipsInDOM = DOM.querySelectorAll('[name="ship"]');
+		self.rotateshipInDOM = DOM.querySelector('#rotateship');
 		self.pieces = [];
-		self.map = DOM.querySelectorAll('.square');
+		self.pointsInDOM = DOM.querySelectorAll('.square');
 		let axisX = []; /* letters across the top of the board */
 		let axisY = []; /* numbers down the left side of the board */
-		self.matrix = []; /* all available coordinates where shipsDOM can be placed */
+		self.matrix = []; /* all available coordinates where shipsInDOM can be placed */
 		self.matrixHorizontal = []; /* coordinates mapped from left to right, top to bottom */
 		self.matrixVertical = []; /* coordinates mapped from top to bottom, left to right */
 		self.matrixOrientation = self.matrixHorizontal; /* set the orientation for selecting coordinates of new ships */
 		self.occupiedMatrix = []; /* coordinates occupied by pieces */
-		self.shipsDOM.forEach((ship) => {
+		self.shipsInDOM.forEach((ship) => {
 			ship.addEventListener('change', selectionSequence);
 		});
 		var shipSizer = 0;
 		var thisShip;
+		var placementAllowed = true;
 		function selectionSequence(shipChangeEvent) {
 			shipSizer = shipChangeEvent.target.value;
 			thisShip = shipChangeEvent.target;
 		}
-		self.shipFlipDOM.addEventListener('click', function() {
+		self.rotateshipInDOM.addEventListener('click', function() {
 			self.matrixOrientation == self.matrixHorizontal ? self.matrixOrientation = self.matrixVertical : self.matrixOrientation = self.matrixHorizontal
 		});
-		self.map.forEach((pointInDOM) => {
+		self.pointsInDOM.forEach((pointInDOM) => {
 			// name the event handler so you can remove it on click
 			pointInDOM.addEventListener('mouseenter', function(event) {
-				for (var i = 0;i < shipSizer;i++) {
+				var temporaryShipCoordinates = [];
 					if (self.matrixOrientation == self.matrixHorizontal) {
-						var x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
-						var y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
+						for (var i = 0;i < shipSizer;i++) {
+							var x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
+							var y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
+							temporaryShipCoordinates.push([x,y]);
+						}
+						temporaryShipCoordinates.forEach((point) => {
+							console.log(point[0], point[1]);
+							if (self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+								placementAllowed = false;
+							} else {
+								placementAllowed = true;
+							}
+						});
 					} else if (self.matrixOrientation == self.matrixVertical) {
-						x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
-						y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);					
+						for (var i = 0;i < shipSizer;i++) {
+							x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
+							y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
+							temporaryShipCoordinates.push([x,y]);
+						}
+						temporaryShipCoordinates.forEach((point) => {
+							if (self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+								placementAllowed = false;
+							} else {
+								placementAllowed = true;
+							}
+						});
 					}
-					if (!event.target.hasAttribute('data-save') && !self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').hasAttribute('data-save')) {
-						self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').setAttribute('data-active', 'active');
+				console.log(placementAllowed);
+				if (placementAllowed != false) {
+					for (var i = 0;i < shipSizer;i++) {
+						if (self.matrixOrientation == self.matrixHorizontal) {
+							var x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
+							var y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
+							self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').setAttribute('data-active', 'active');
+						} else if (self.matrixOrientation == self.matrixVertical) {
+							x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
+							y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
+							self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').setAttribute('data-active', 'active');					
+						}
 					}
 				}
 			});
@@ -97,7 +130,7 @@ class Board {
 						var x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
 						var y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
 					}
-				}				
+				}
 				if (!event.target.hasAttribute('data-save') && !self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').hasAttribute('data-save')) {
 					var savedShipPoints = [];
 					self.DOM.querySelectorAll('[data-active="active"]').forEach((activePoint) => {
@@ -105,6 +138,7 @@ class Board {
 						savedShipPoints.push(activePoint.attributes['data-coordinate'].nodeValue);
 						activePoint.removeAttribute('data-active');
 						activePoint.setAttribute('data-save', 'saved');
+						activePoint.setAttribute('data-ship', thisShip.attributes['data-piece'].nodeValue);
 					});
 					console.log(self.occupiedMatrix);
 					thisShip.checked = false;
