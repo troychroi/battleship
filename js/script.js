@@ -2,15 +2,21 @@
 
 MASTER PLAN
 
-1. map out board
+1. map out board for player 1
 2. player 1 can select a game piece
 3. player 1 can place the piece on the board
 4. player 1 can change orientation of piece to be placed on the board
 5. player 1 can save the piece(s) on the board
-6. player 2 sets up board
-7. player 1 can attempt a hit
-8. player 2 can attempt a hit
-9. someone can win
+
+6. map out board for player 2
+7. player 2 can select a game piece
+8. player 2 can place the piece on the board
+9. player 2 can change orientation of piece to be placed on the board
+10. player 2 can save the piece(s) on the board
+
+11. player 1 can attempt a hit
+12. player 2 can attempt a hit
+13. someone can win
 
 
 DEVELOPMENT PLAN (unordered list of tasks and/or problems)
@@ -21,6 +27,26 @@ x don't allow a ship to straddle another ship either!
 x when the matrixOrientation is switched to vertical, the last column isn't allowed - fix this!
 x when the matrixOrientation is switched to horizontal, the last row takes on the hover, but the point and the siblings are also mirrored in the first row - fix this!
 x if you hover over a saved coordinate and then hover on a coordinate right below it (in vertical mode), placementAllowed remains false. we want it to be true in this case
+-----------------
+o seperate sequence of gameplay into individual parts:
+	- start game setup
+	- player 1 setup board
+	if player 1 has no more ships to place:
+		- player 2 setup board
+	if player 2 has no more ships to place:
+		- start game play
+			while player 2 has alive ships:
+				- player 1 turn
+			else:
+				- player 1 wins
+			while player 1 has alive ships:
+				- player 2 turn
+			else:
+				- player 2 wins
+		- reveal both players' boards
+		- start a new game?
+o generate DOM rather than hard-coding it in index.html
+
 
 */
 
@@ -72,8 +98,6 @@ class Board {
 					temporaryShipCoordinates.forEach((point) => {
 						if (event.target.hasAttribute('data-save') || self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
 							placementAllowed = false;
-							console.clear();
-							console.log('I made placementAllowed '+placementAllowed+' because',event.target, self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]'));
 						}
 					});
 				} else if (self.matrixOrientation == self.matrixVertical) {
@@ -85,8 +109,6 @@ class Board {
 					temporaryShipCoordinates.forEach((point) => {
 						if (event.target.hasAttribute('data-save') || self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
 							placementAllowed = false;
-							console.clear();
-							console.log('I made placementAllowed '+placementAllowed+' because',event.target, self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]'));
 						}
 					});
 				}
@@ -103,8 +125,6 @@ class Board {
 						}
 					}
 				}
-				console.log('end');
-				console.log('placementAllowed: '+placementAllowed);
 			});
 			// name the event handler so you can remove it on click
 			pointInDOM.addEventListener('mouseout', function(event) {
@@ -116,7 +136,7 @@ class Board {
 						self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').removeAttribute('data-active');
 					}
 					temporaryShipCoordinates.forEach((point) => {
-						if (!event.target.hasAttribute('data-save') && !self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+						if (!event.target.hasAttribute('data-save') || !self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
 							placementAllowed = true;
 						}
 					});
@@ -154,14 +174,12 @@ class Board {
 						activePoint.setAttribute('data-save', 'saved');
 						activePoint.setAttribute('data-ship', thisShip.attributes['data-piece'].nodeValue);
 					});
-					console.log(self.occupiedMatrix);
 					thisShip.checked = false;
 					thisShip.setAttribute('disabled', 'disabled');
 					thisShip.removeEventListener('change', setFromSelection);
 					shipSizer = 0;
 					var newPiece = new Piece(savedShipPoints, thisShip.attributes['data-piece'].nodeValue);
 					self.pieces.push(newPiece);
-					console.log(self.pieces);
 				}
 			});
 		});
@@ -241,4 +259,4 @@ class Piece {
 
 var gridmaxglobal = 10;
 
-var playerBoard = new Board(document.querySelector('#app .board.player'));
+var player1Board = new Board(document.querySelector('#app .board.player'));
