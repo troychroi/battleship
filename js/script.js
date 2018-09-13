@@ -15,12 +15,12 @@ MASTER PLAN
 
 DEVELOPMENT PLAN (unordered list of tasks and/or problems)
 
-o when user saves a ship position on the board, create an actual ship object with its coordinates in an array
+x when user saves a ship position on the board, create an actual ship object with its coordinates in an array
 x don't allow a ship to place over another saved ship
-o don't allow a ship to straddle another ship either!
+x don't allow a ship to straddle another ship either!
 x when the matrixOrientation is switched to vertical, the last column isn't allowed - fix this!
 x when the matrixOrientation is switched to horizontal, the last row takes on the hover, but the point and the siblings are also mirrored in the first row - fix this!
- o perhaps the mouseenter event should be attached to the board, and not the individual squares
+x if you hover over a saved coordinate and then hover on a coordinate right below it (in vertical mode), placementAllowed remains false. we want it to be true in this case
 
 */
 
@@ -45,12 +45,12 @@ class Board {
 		self.matrixOrientation = self.matrixHorizontal; /* set the orientation for selecting coordinates of new ships */
 		self.occupiedMatrix = []; /* coordinates occupied by pieces */
 		self.shipsInDOM.forEach((ship) => {
-			ship.addEventListener('change', selectionSequence);
+			ship.addEventListener('change', setFromSelection);
 		});
 		var shipSizer = 0;
 		var thisShip;
 		var placementAllowed = true;
-		function selectionSequence(shipChangeEvent) {
+		function setFromSelection(shipChangeEvent) {
 			shipSizer = shipChangeEvent.target.value;
 			thisShip = shipChangeEvent.target;
 		}
@@ -61,31 +61,35 @@ class Board {
 			// name the event handler so you can remove it on click
 			var temporaryShipCoordinates = [];
 			pointInDOM.addEventListener('mouseenter', function(event) {
-					temporaryShipCoordinates = [];
-					if (self.matrixOrientation == self.matrixHorizontal) {
-						for (var i = 0;i < shipSizer;i++) {
-							var x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
-							var y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
-							temporaryShipCoordinates.push([x,y]);
-						}
-						temporaryShipCoordinates.forEach((point) => {
-							if (event.target.hasAttribute('data-save') || self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
-								placementAllowed = false;
-							}
-						});
-					} else if (self.matrixOrientation == self.matrixVertical) {
-						for (var i = 0;i < shipSizer;i++) {
-							x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
-							y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
-							temporaryShipCoordinates.push([x,y]);
-						}
-						temporaryShipCoordinates.forEach((point) => {
-							if (event.target.hasAttribute('data-save') || self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
-								placementAllowed = false;
-							}
-						});
+				// reset temporaryShipCoordinates
+				temporaryShipCoordinates = [];
+				if (self.matrixOrientation == self.matrixHorizontal) {
+					for (var i = 0;i < shipSizer;i++) {
+						var x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
+						var y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
+						temporaryShipCoordinates.push([x,y]);
 					}
-				console.log(placementAllowed);
+					temporaryShipCoordinates.forEach((point) => {
+						if (event.target.hasAttribute('data-save') || self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+							placementAllowed = false;
+							console.clear();
+							console.log('I made placementAllowed '+placementAllowed+' because',event.target, self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]'));
+						}
+					});
+				} else if (self.matrixOrientation == self.matrixVertical) {
+					for (var i = 0;i < shipSizer;i++) {
+						x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
+						y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
+						temporaryShipCoordinates.push([x,y]);
+					}
+					temporaryShipCoordinates.forEach((point) => {
+						if (event.target.hasAttribute('data-save') || self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+							placementAllowed = false;
+							console.clear();
+							console.log('I made placementAllowed '+placementAllowed+' because',event.target, self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]'));
+						}
+					});
+				}
 				if (placementAllowed != false) {
 					for (var i = 0;i < shipSizer;i++) {
 						if (self.matrixOrientation == self.matrixHorizontal) {
@@ -99,6 +103,8 @@ class Board {
 						}
 					}
 				}
+				console.log('end');
+				console.log('placementAllowed: '+placementAllowed);
 			});
 			// name the event handler so you can remove it on click
 			pointInDOM.addEventListener('mouseout', function(event) {
@@ -121,11 +127,12 @@ class Board {
 						self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').removeAttribute('data-active');
 					}
 					temporaryShipCoordinates.forEach((point) => {
-						if (!event.target.hasAttribute('data-save') && !self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+						if (!event.target.hasAttribute('data-save') || !self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
 							placementAllowed = true;
 						}
 					});
 				}
+				// reset temporaryShipCoordinates
 				temporaryShipCoordinates = [];
 			});
 			pointInDOM.addEventListener('click', function(event) {
@@ -150,7 +157,7 @@ class Board {
 					console.log(self.occupiedMatrix);
 					thisShip.checked = false;
 					thisShip.setAttribute('disabled', 'disabled');
-					thisShip.removeEventListener('change', selectionSequence);
+					thisShip.removeEventListener('change', setFromSelection);
 					shipSizer = 0;
 					var newPiece = new Piece(savedShipPoints, thisShip.attributes['data-piece'].nodeValue);
 					self.pieces.push(newPiece);
