@@ -70,119 +70,141 @@ class Board {
 		self.matrixVertical = []; /* coordinates mapped from top to bottom, left to right */
 		self.matrixOrientation = self.matrixHorizontal; /* set the orientation for selecting coordinates of new ships */
 		self.occupiedMatrix = []; /* coordinates occupied by pieces */
-		self.shipsInDOM.forEach((ship) => {
-			ship.addEventListener('change', setFromSelection);
-		});
-		var shipSizer = 0;
-		var thisShip;
-		var placementAllowed = true;
-		function setFromSelection(shipChangeEvent) {
-			shipSizer = shipChangeEvent.target.value;
-			thisShip = shipChangeEvent.target;
+		
+		// START SELECTION PROCESS
+		self.startSelectionProcessInDOM = DOM.querySelector('#startselection');
+		self.startSelectionProcessInDOM.addEventListener('click', startSelectionProcess);
+		function endSelectionProcess() {
+			self.startSelectionProcessInDOM.removeEventListener('click', startSelectionProcess);
+			if (self.pieces.length == self.shipsInDOM.length) {
+				self.pointsInDOM.forEach((pointInDOM) => {
+					pointInDOM.removeEventListener('click', pointInDOMClickHandler);
+					pointInDOM.removeEventListener('mouseenter', mouseIn);
+					pointInDOM.removeEventListener('mouseout', mouseExit);
+				});
+			}
 		}
-		self.rotateshipInDOM.addEventListener('click', function() {
-			self.matrixOrientation == self.matrixHorizontal ? self.matrixOrientation = self.matrixVertical : self.matrixOrientation = self.matrixHorizontal
-		});
-		self.pointsInDOM.forEach((pointInDOM) => {
-			// name the event handler so you can remove it on click
-			var temporaryShipCoordinates = [];
-			pointInDOM.addEventListener('mouseenter', function(event) {
-				// reset temporaryShipCoordinates
-				temporaryShipCoordinates = [];
-				if (self.matrixOrientation == self.matrixHorizontal) {
-					for (var i = 0;i < shipSizer;i++) {
-						var x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
-						var y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
-						temporaryShipCoordinates.push([x,y]);
-					}
-					temporaryShipCoordinates.forEach((point) => {
-						if (event.target.hasAttribute('data-save') || self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
-							placementAllowed = false;
+		function startSelectionProcess() {
+			self.shipsInDOM.forEach((ship) => {
+				ship.addEventListener('change', setFromSelection);
+			});
+			var shipSizer = 0;
+			var thisShip;
+			var placementAllowed = true;
+			function setFromSelection(shipChangeEvent) {
+				shipSizer = shipChangeEvent.target.value;
+				thisShip = shipChangeEvent.target;
+			}
+			self.rotateshipInDOM.addEventListener('click', function() {
+				self.matrixOrientation == self.matrixHorizontal ? self.matrixOrientation = self.matrixVertical : self.matrixOrientation = self.matrixHorizontal
+			});
+			self.pointsInDOM.forEach((pointInDOM) => {
+				// name the event handler so you can remove it on click
+				var temporaryShipCoordinates = [];
+				pointInDOM.addEventListener('mouseenter', mouseIn);
+				function mouseIn(event) {
+					// reset temporaryShipCoordinates
+					temporaryShipCoordinates = [];
+					if (self.matrixOrientation == self.matrixHorizontal) {
+						for (var i = 0;i < shipSizer;i++) {
+							var x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
+							var y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
+							temporaryShipCoordinates.push([x,y]);
 						}
-					});
-				} else if (self.matrixOrientation == self.matrixVertical) {
-					for (var i = 0;i < shipSizer;i++) {
-						x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
-						y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
-						temporaryShipCoordinates.push([x,y]);
-					}
-					temporaryShipCoordinates.forEach((point) => {
-						if (event.target.hasAttribute('data-save') || self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
-							placementAllowed = false;
+						temporaryShipCoordinates.forEach((point) => {
+							if (self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+								placementAllowed = false;
+							}
+						});
+					} else if (self.matrixOrientation == self.matrixVertical) {
+						for (var i = 0;i < shipSizer;i++) {
+							x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
+							y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
+							temporaryShipCoordinates.push([x,y]);
 						}
-					});
+						temporaryShipCoordinates.forEach((point) => {
+							if (self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+								placementAllowed = false;
+							}
+						});
+					}
+					if (placementAllowed != false) {
+						for (var i = 0;i < shipSizer;i++) {
+							if (self.matrixOrientation == self.matrixHorizontal) {
+								var x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
+								var y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
+								self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').setAttribute('data-active', 'active');
+							} else if (self.matrixOrientation == self.matrixVertical) {
+								x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
+								y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
+								self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').setAttribute('data-active', 'active');					
+							}
+						}
+					}
 				}
-				if (placementAllowed != false) {
+				// name the event handler so you can remove it on click
+				pointInDOM.addEventListener('mouseout', mouseExit);
+				function mouseExit(event) {
+					event.target.removeAttribute('data-active');
+					if (self.matrixOrientation == self.matrixHorizontal) {
+						for (var i = 0;i < thisShip.value;i++) {
+							var x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
+							var y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
+							self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').removeAttribute('data-active');
+						}
+						temporaryShipCoordinates.forEach((point) => {
+							if (!self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+								placementAllowed = true;
+							}
+						});
+					} else if (self.matrixOrientation == self.matrixVertical) {
+						for (var i = 0;i < thisShip.value;i++) {
+							x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
+							y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
+							self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').removeAttribute('data-active');
+						}
+						temporaryShipCoordinates.forEach((point) => {
+							if (!self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+								placementAllowed = true;
+							}
+						});
+					}
+					// reset temporaryShipCoordinates
+					temporaryShipCoordinates = [];
+				}
+				// name the event handler so you can remove it on end
+				pointInDOM.addEventListener('click', pointInDOMClickHandler);
+				pointInDOM.addEventListener('click', endSelectionProcess);
+				function pointInDOMClickHandler(event) {
 					for (var i = 0;i < shipSizer;i++) {
 						if (self.matrixOrientation == self.matrixHorizontal) {
 							var x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
 							var y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
-							self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').setAttribute('data-active', 'active');
 						} else if (self.matrixOrientation == self.matrixVertical) {
-							x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
-							y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
-							self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').setAttribute('data-active', 'active');					
+							var x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
+							var y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
 						}
+					}
+					if (!event.target.hasAttribute('data-save') && !self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').hasAttribute('data-save')) {
+						var savedShipPoints = [];
+						self.DOM.querySelectorAll('[data-active="active"]').forEach((activePoint) => {
+							self.occupiedMatrix.push(activePoint.attributes['data-coordinate'].nodeValue);
+							savedShipPoints.push(activePoint.attributes['data-coordinate'].nodeValue);
+							activePoint.removeAttribute('data-active');
+							activePoint.setAttribute('data-save', 'saved');
+							activePoint.setAttribute('data-ship', thisShip.attributes['data-piece'].nodeValue);
+						});
+						thisShip.checked = false;
+						thisShip.setAttribute('disabled', 'disabled');
+						thisShip.removeEventListener('change', setFromSelection);
+						shipSizer = 0;
+						var newPiece = new Piece(savedShipPoints, thisShip.attributes['data-piece'].nodeValue);
+						self.pieces.push(newPiece);
 					}
 				}
 			});
-			// name the event handler so you can remove it on click
-			pointInDOM.addEventListener('mouseout', function(event) {
-				event.target.removeAttribute('data-active');
-				if (self.matrixOrientation == self.matrixHorizontal) {
-					for (var i = 0;i < thisShip.value;i++) {
-						var x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
-						var y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
-						self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').removeAttribute('data-active');
-					}
-					temporaryShipCoordinates.forEach((point) => {
-						if (!event.target.hasAttribute('data-save') || !self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
-							placementAllowed = true;
-						}
-					});
-				} else if (self.matrixOrientation == self.matrixVertical) {
-					for (var i = 0;i < thisShip.value;i++) {
-						x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
-						y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
-						self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').removeAttribute('data-active');
-					}
-					temporaryShipCoordinates.forEach((point) => {
-						if (!event.target.hasAttribute('data-save') || !self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
-							placementAllowed = true;
-						}
-					});
-				}
-				// reset temporaryShipCoordinates
-				temporaryShipCoordinates = [];
-			});
-			pointInDOM.addEventListener('click', function(event) {
-				for (var i = 0;i < shipSizer;i++) {
-					if (self.matrixOrientation == self.matrixHorizontal) {
-						var x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
-						var y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
-					} else if (self.matrixOrientation == self.matrixVertical) {
-						var x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
-						var y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
-					}
-				}
-				if (!event.target.hasAttribute('data-save') && !self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').hasAttribute('data-save')) {
-					var savedShipPoints = [];
-					self.DOM.querySelectorAll('[data-active="active"]').forEach((activePoint) => {
-						self.occupiedMatrix.push(activePoint.attributes['data-coordinate'].nodeValue);
-						savedShipPoints.push(activePoint.attributes['data-coordinate'].nodeValue);
-						activePoint.removeAttribute('data-active');
-						activePoint.setAttribute('data-save', 'saved');
-						activePoint.setAttribute('data-ship', thisShip.attributes['data-piece'].nodeValue);
-					});
-					thisShip.checked = false;
-					thisShip.setAttribute('disabled', 'disabled');
-					thisShip.removeEventListener('change', setFromSelection);
-					shipSizer = 0;
-					var newPiece = new Piece(savedShipPoints, thisShip.attributes['data-piece'].nodeValue);
-					self.pieces.push(newPiece);
-				}
-			});
-		});
+		}
+		// END SELECTION PROCESS
 		// create two arrays containing equal number of numbers based on gridmax, which is set by gridmaxglobal
 		for (var it = 0;it < self.gridmax;it++) {
 			axisY.push(it+1);
