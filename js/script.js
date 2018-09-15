@@ -29,11 +29,12 @@ x when the matrixOrientation is switched to horizontal, the last row takes on th
 x if you hover over a saved coordinate and then hover on a coordinate right below it (in vertical mode), placementAllowed remains false. we want it to be true in this case
 -----------------
 o seperate sequence of gameplay into individual parts:
-	- start game setup
-	- player 1 setup board
-	if player 1 has no more ships to place:
+	x start game setup
+	o end game setup
+	o player 1 setup board
+	o if player 1 has no more ships to place:
 		- player 2 setup board
-	if player 2 has no more ships to place:
+	o if player 2 has no more ships to place:
 		- start game play
 			while player 2 has alive ships:
 				- player 1 turn
@@ -59,9 +60,9 @@ class Board {
 		self = this;
 		self.gridmax = gridmaxglobal;
 		self.DOM = DOM;
-		self.shipsInDOM = DOM.querySelectorAll('[name="ship"]');
-		self.rotateshipInDOM = DOM.querySelector('#rotateship');
-		self.pieces = [];
+		self.shipsInDOM = DOM.querySelectorAll('[name="ship"]'); /* radio buttons in the DOM with attributes[name(ship),value(#-of-points),data-piece(type-of-ship)] */
+		self.rotateshipInDOM = DOM.querySelector('#rotateship'); /* button in DOM that toggles the horizontal or vertical orientation of the ship being placed */
+		self.pieces = []; /* saved game pieces are pushed here */
 		self.pointsInDOM = DOM.querySelectorAll('.square');
 		let axisX = []; /* letters across the top of the board */
 		let axisY = []; /* numbers down the left side of the board */
@@ -72,146 +73,19 @@ class Board {
 		self.occupiedMatrix = []; /* coordinates occupied by pieces */
 		
 		// START SELECTION PROCESS
-		self.startSelectionProcessInDOM = DOM.querySelector('#startselection');
-		self.startSelectionProcessInDOM.addEventListener('click', startSelectionProcess);
-		function endSelectionProcess() {
-			self.startSelectionProcessInDOM.removeEventListener('click', startSelectionProcess);
-			if (self.pieces.length == self.shipsInDOM.length) {
-				self.pointsInDOM.forEach((pointInDOM) => {
-					pointInDOM.removeEventListener('click', pointInDOMClickHandler);
-					pointInDOM.removeEventListener('mouseenter', mouseIn);
-					pointInDOM.removeEventListener('mouseout', mouseExit);
-				});
-			}
-		}
-		function startSelectionProcess() {
-			self.shipsInDOM.forEach((ship) => {
-				ship.addEventListener('change', setFromSelection);
-			});
-			var shipSizer = 0;
-			var thisShip;
-			var placementAllowed = true;
-			function setFromSelection(shipChangeEvent) {
-				shipSizer = shipChangeEvent.target.value;
-				thisShip = shipChangeEvent.target;
-			}
-			self.rotateshipInDOM.addEventListener('click', function() {
-				self.matrixOrientation == self.matrixHorizontal ? self.matrixOrientation = self.matrixVertical : self.matrixOrientation = self.matrixHorizontal
-			});
-			self.pointsInDOM.forEach((pointInDOM) => {
-				// name the event handler so you can remove it on click
-				var temporaryShipCoordinates = [];
-				pointInDOM.addEventListener('mouseenter', mouseIn);
-				function mouseIn(event) {
-					// reset temporaryShipCoordinates
-					temporaryShipCoordinates = [];
-					if (self.matrixOrientation == self.matrixHorizontal) {
-						for (var i = 0;i < shipSizer;i++) {
-							var x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
-							var y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
-							temporaryShipCoordinates.push([x,y]);
-						}
-						temporaryShipCoordinates.forEach((point) => {
-							if (self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
-								placementAllowed = false;
-							}
-						});
-					} else if (self.matrixOrientation == self.matrixVertical) {
-						for (var i = 0;i < shipSizer;i++) {
-							x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
-							y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
-							temporaryShipCoordinates.push([x,y]);
-						}
-						temporaryShipCoordinates.forEach((point) => {
-							if (self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
-								placementAllowed = false;
-							}
-						});
-					}
-					if (placementAllowed != false) {
-						for (var i = 0;i < shipSizer;i++) {
-							if (self.matrixOrientation == self.matrixHorizontal) {
-								var x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
-								var y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
-								self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').setAttribute('data-active', 'active');
-							} else if (self.matrixOrientation == self.matrixVertical) {
-								x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
-								y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
-								self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').setAttribute('data-active', 'active');					
-							}
-						}
-					}
-				}
-				// name the event handler so you can remove it on click
-				pointInDOM.addEventListener('mouseout', mouseExit);
-				function mouseExit(event) {
-					event.target.removeAttribute('data-active');
-					if (self.matrixOrientation == self.matrixHorizontal) {
-						for (var i = 0;i < thisShip.value;i++) {
-							var x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
-							var y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
-							self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').removeAttribute('data-active');
-						}
-						temporaryShipCoordinates.forEach((point) => {
-							if (!self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
-								placementAllowed = true;
-							}
-						});
-					} else if (self.matrixOrientation == self.matrixVertical) {
-						for (var i = 0;i < thisShip.value;i++) {
-							x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
-							y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
-							self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').removeAttribute('data-active');
-						}
-						temporaryShipCoordinates.forEach((point) => {
-							if (!self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
-								placementAllowed = true;
-							}
-						});
-					}
-					// reset temporaryShipCoordinates
-					temporaryShipCoordinates = [];
-				}
-				// name the event handler so you can remove it on end
-				pointInDOM.addEventListener('click', pointInDOMClickHandler);
-				pointInDOM.addEventListener('click', endSelectionProcess);
-				function pointInDOMClickHandler(event) {
-					for (var i = 0;i < shipSizer;i++) {
-						if (self.matrixOrientation == self.matrixHorizontal) {
-							var x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
-							var y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
-						} else if (self.matrixOrientation == self.matrixVertical) {
-							var x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
-							var y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
-						}
-					}
-					if (!event.target.hasAttribute('data-save') && !self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').hasAttribute('data-save')) {
-						var savedShipPoints = [];
-						self.DOM.querySelectorAll('[data-active="active"]').forEach((activePoint) => {
-							self.occupiedMatrix.push(activePoint.attributes['data-coordinate'].nodeValue);
-							savedShipPoints.push(activePoint.attributes['data-coordinate'].nodeValue);
-							activePoint.removeAttribute('data-active');
-							activePoint.setAttribute('data-save', 'saved');
-							activePoint.setAttribute('data-ship', thisShip.attributes['data-piece'].nodeValue);
-						});
-						thisShip.checked = false;
-						thisShip.setAttribute('disabled', 'disabled');
-						thisShip.removeEventListener('change', setFromSelection);
-						shipSizer = 0;
-						var newPiece = new Piece(savedShipPoints, thisShip.attributes['data-piece'].nodeValue);
-						self.pieces.push(newPiece);
-					}
-				}
-			});
-		}
+		self.startSelectionProcessInDOM = self.DOM.querySelector('#startselection');
+		self.startSelectionProcessInDOM.addEventListener('click', self.startSelectionProcess);
 		// END SELECTION PROCESS
+
 		// create two arrays containing equal number of numbers based on gridmax, which is set by gridmaxglobal
-		for (var it = 0;it < self.gridmax;it++) {
+		for (let it = 0;it < self.gridmax;it++) {
 			axisY.push(it+1);
 			axisX.push(it+1);
 		}
-		for(var i = 0; i < axisY.length; i++) {
-			for(var j = 0; j < axisX.length; j++) {
+
+		// generate the gameboard coordinates
+		for(let i = 0; i < axisY.length; i++) {
+			for(let j = 0; j < axisX.length; j++) {
 				self.matrix.push([axisY[j], axisX[i]]); /* push to main matrix */
 				self.matrixHorizontal.push([axisY[j], axisX[i]]); /* push coordinates to alt matrixes */
 				self.matrixVertical.push([axisY[i], axisX[j]]); /* push coordinates to alt matrixes */
@@ -219,6 +93,113 @@ class Board {
 				translate.push(axisX[i] + String.fromCharCode(97+axisY[j])); /* push possible numer-letter combinations to array */
 			}
 		}
+	}
+
+	endSelectionProcess() {
+		self.startSelectionProcessInDOM.removeEventListener('click', startSelectionProcess);
+		if (self.pieces.length == self.shipsInDOM.length) {
+			self.pointsInDOM.forEach((pointInDOM) => {
+				pointInDOM.removeEventListener('click', pointInDOMClickHandler);
+				pointInDOM.removeEventListener('mouseenter', mouseIn);
+				pointInDOM.removeEventListener('mouseout', mouseExit);
+			});
+		}
+	}
+	startSelectionProcess(event) {
+		event.target.style.display = 'none';
+		self.DOM.querySelector('.ships .controls').style.display = 'block';
+		self.shipsInDOM.forEach((ship) => {
+			ship.addEventListener('change', setFromSelection);
+		});
+		let shipSizer = 0;
+		let thisShip;
+		let placementAllowed = true;
+		function setFromSelection(shipChangeEvent) {
+			shipSizer = shipChangeEvent.target.value;
+			thisShip = shipChangeEvent.target;
+		}
+		self.rotateshipInDOM.addEventListener('click', function() {
+			self.matrixOrientation == self.matrixHorizontal ? self.matrixOrientation = self.matrixVertical : self.matrixOrientation = self.matrixHorizontal
+		});
+		self.pointsInDOM.forEach((pointInDOM) => {
+			let temporaryShipCoordinates = [];
+			var x;
+			var y;
+			function hoverShipOverBoard(callback) {
+				for (let i = 0;i < shipSizer;i++) {
+					if (self.matrixOrientation == self.matrixHorizontal) {
+						x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
+						y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
+						if (typeof callback === "function") {
+							callback();
+						}
+					} else if (self.matrixOrientation == self.matrixVertical) {
+						x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
+						y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
+						if (typeof callback === "function") {
+							callback();
+						}
+					}
+				}
+			}
+			function mouseIn(event) {
+				// reset temporaryShipCoordinates
+				temporaryShipCoordinates = [];
+				// POSSIBLE DUPLICATION
+				hoverShipOverBoard(() => {
+					temporaryShipCoordinates.push([x,y]);
+				});
+				temporaryShipCoordinates.forEach((point) => {
+					if (self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+						placementAllowed = false;
+					}
+				});
+				if (placementAllowed != false) {
+					hoverShipOverBoard(() => {
+						self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').setAttribute('data-active', 'active');
+					});
+				}
+			}
+			pointInDOM.addEventListener('mouseenter', mouseIn);
+			function mouseExit(event) {
+				event.target.removeAttribute('data-active');
+				// POSSIBLE DUPLICATION
+				hoverShipOverBoard(() => {
+					self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').removeAttribute('data-active');
+				});
+				temporaryShipCoordinates.forEach((point) => {
+					if (!self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+						placementAllowed = true;
+					}
+				});
+				// reset temporaryShipCoordinates
+				temporaryShipCoordinates = [];
+			}
+			pointInDOM.addEventListener('mouseout', mouseExit);
+			function pointInDOMClickHandler(event) {
+				// POSSIBLE DUPLICATION
+				hoverShipOverBoard();
+				if (!event.target.hasAttribute('data-save') && !self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').hasAttribute('data-save')) {
+					let savedShipPoints = [];
+					self.DOM.querySelectorAll('[data-active="active"]').forEach((activePoint) => {
+						self.occupiedMatrix.push(activePoint.attributes['data-coordinate'].nodeValue);
+						savedShipPoints.push(activePoint.attributes['data-coordinate'].nodeValue);
+						activePoint.removeAttribute('data-active');
+						activePoint.setAttribute('data-save', 'saved');
+						activePoint.setAttribute('data-ship', thisShip.attributes['data-piece'].nodeValue);
+					});
+					thisShip.checked = false;
+					thisShip.setAttribute('disabled', 'disabled');
+					thisShip.removeEventListener('change', setFromSelection);
+					shipSizer = 0;
+					let newPiece = new Piece(savedShipPoints, thisShip.attributes['data-piece'].nodeValue);
+					self.pieces.push(newPiece);
+				}
+				pointInDOM.removeEventListener('mouseenter', mouseIn);
+				pointInDOM.removeEventListener('mouseout', mouseExit);
+			}
+			pointInDOM.addEventListener('click', pointInDOMClickHandler);
+		});
 	}
 
 	hit(coordinate) {

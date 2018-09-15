@@ -99,3 +99,7 @@
 .ships [name="ship"][disabled], .ships [name="ship"][disabled] + label {
 	opacity: .5
 }
+
+.ships .controls {
+	display: none;
+}
