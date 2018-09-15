@@ -51,6 +51,159 @@ o move the ship placement sequencing out of the class Board declaration
 
 */
 
+
+`	
+<div class="board player player1">
+	<div class="ships">
+		<button id="startselection">Start Placing Ships</button>
+		<div class="controls">
+			<h2>Your Ships</h2>
+			<fieldset>
+				<input type="radio" name="ship" value="5" data-piece="Carrier"><label>*****</label>
+				<input type="radio" name="ship" value="4" data-piece="Battleship"><label>****</label>
+				<input type="radio" name="ship" value="3" data-piece="Submarine"><label>***</label>
+				<input type="radio" name="ship" value="3" data-piece="Cruiser"><label>***</label>
+				<input type="radio" name="ship" value="2" data-piece="Destroyer"><label>**</label>
+			</fieldset>
+			<button id="rotateship">Flip Ship</button>
+		</div>
+	</div>			
+	<div class="legend axis-x">
+		<div class="point">1</div>
+		<div class="point">2</div>
+		<div class="point">3</div>
+		<div class="point">4</div>
+		<div class="point">5</div>
+		<div class="point">6</div>
+		<div class="point">7</div>
+		<div class="point">8</div>
+		<div class="point">9</div>
+		<div class="point">10</div>
+	</div>
+	<div class="legend axis-y">
+		<div class="point">A</div>
+		<div class="point">B</div>
+		<div class="point">C</div>
+		<div class="point">D</div>
+		<div class="point">E</div>
+		<div class="point">F</div>
+		<div class="point">G</div>
+		<div class="point">H</div>
+		<div class="point">I</div>
+		<div class="point">J</div>
+	</div>
+	<div class="square" data-coordinate="1,1"></div>
+	<div class="square" data-coordinate="2,1"></div>
+	<div class="square" data-coordinate="3,1"></div>
+	<div class="square" data-coordinate="4,1"></div>
+	<div class="square" data-coordinate="5,1"></div>
+	<div class="square" data-coordinate="6,1"></div>
+	<div class="square" data-coordinate="7,1"></div>
+	<div class="square" data-coordinate="8,1"></div>
+	<div class="square" data-coordinate="9,1"></div>
+	<div class="square" data-coordinate="10,1"></div>
+
+	<div class="square" data-coordinate="1,2"></div>
+	<div class="square" data-coordinate="2,2"></div>
+	<div class="square" data-coordinate="3,2"></div>
+	<div class="square" data-coordinate="4,2"></div>
+	<div class="square" data-coordinate="5,2"></div>
+	<div class="square" data-coordinate="6,2"></div>
+	<div class="square" data-coordinate="7,2"></div>
+	<div class="square" data-coordinate="8,2"></div>
+	<div class="square" data-coordinate="9,2"></div>
+	<div class="square" data-coordinate="10,2"></div>
+
+	<div class="square" data-coordinate="1,3"></div>
+	<div class="square" data-coordinate="2,3"></div>
+	<div class="square" data-coordinate="3,3"></div>
+	<div class="square" data-coordinate="4,3"></div>
+	<div class="square" data-coordinate="5,3"></div>
+	<div class="square" data-coordinate="6,3"></div>
+	<div class="square" data-coordinate="7,3"></div>
+	<div class="square" data-coordinate="8,3"></div>
+	<div class="square" data-coordinate="9,3"></div>
+	<div class="square" data-coordinate="10,3"></div>
+
+	<div class="square" data-coordinate="1,4"></div>
+	<div class="square" data-coordinate="2,4"></div>
+	<div class="square" data-coordinate="3,4"></div>
+	<div class="square" data-coordinate="4,4"></div>
+	<div class="square" data-coordinate="5,4"></div>
+	<div class="square" data-coordinate="6,4"></div>
+	<div class="square" data-coordinate="7,4"></div>
+	<div class="square" data-coordinate="8,4"></div>
+	<div class="square" data-coordinate="9,4"></div>
+	<div class="square" data-coordinate="10,4"></div>
+
+	<div class="square" data-coordinate="1,5"></div>
+	<div class="square" data-coordinate="2,5"></div>
+	<div class="square" data-coordinate="3,5"></div>
+	<div class="square" data-coordinate="4,5"></div>
+	<div class="square" data-coordinate="5,5"></div>
+	<div class="square" data-coordinate="6,5"></div>
+	<div class="square" data-coordinate="7,5"></div>
+	<div class="square" data-coordinate="8,5"></div>
+	<div class="square" data-coordinate="9,5"></div>
+	<div class="square" data-coordinate="10,5"></div>
+
+	<div class="square" data-coordinate="1,6"></div>
+	<div class="square" data-coordinate="2,6"></div>
+	<div class="square" data-coordinate="3,6"></div>
+	<div class="square" data-coordinate="4,6"></div>
+	<div class="square" data-coordinate="5,6"></div>
+	<div class="square" data-coordinate="6,6"></div>
+	<div class="square" data-coordinate="7,6"></div>
+	<div class="square" data-coordinate="8,6"></div>
+	<div class="square" data-coordinate="9,6"></div>
+	<div class="square" data-coordinate="10,6"></div>
+
+	<div class="square" data-coordinate="1,7"></div>
+	<div class="square" data-coordinate="2,7"></div>
+	<div class="square" data-coordinate="3,7"></div>
+	<div class="square" data-coordinate="4,7"></div>
+	<div class="square" data-coordinate="5,7"></div>
+	<div class="square" data-coordinate="6,7"></div>
+	<div class="square" data-coordinate="7,7"></div>
+	<div class="square" data-coordinate="8,7"></div>
+	<div class="square" data-coordinate="9,7"></div>
+	<div class="square" data-coordinate="10,7"></div>
+
+	<div class="square" data-coordinate="1,8"></div>
+	<div class="square" data-coordinate="2,8"></div>
+	<div class="square" data-coordinate="3,8"></div>
+	<div class="square" data-coordinate="4,8"></div>
+	<div class="square" data-coordinate="5,8"></div>
+	<div class="square" data-coordinate="6,8"></div>
+	<div class="square" data-coordinate="7,8"></div>
+	<div class="square" data-coordinate="8,8"></div>
+	<div class="square" data-coordinate="9,8"></div>
+	<div class="square" data-coordinate="10,8"></div>
+
+	<div class="square" data-coordinate="1,9"></div>
+	<div class="square" data-coordinate="2,9"></div>
+	<div class="square" data-coordinate="3,9"></div>
+	<div class="square" data-coordinate="4,9"></div>
+	<div class="square" data-coordinate="5,9"></div>
+	<div class="square" data-coordinate="6,9"></div>
+	<div class="square" data-coordinate="7,9"></div>
+	<div class="square" data-coordinate="8,9"></div>
+	<div class="square" data-coordinate="9,9"></div>
+	<div class="square" data-coordinate="10,9"></div>
+
+	<div class="square" data-coordinate="1,10"></div>
+	<div class="square" data-coordinate="2,10"></div>
+	<div class="square" data-coordinate="3,10"></div>
+	<div class="square" data-coordinate="4,10"></div>
+	<div class="square" data-coordinate="5,10"></div>
+	<div class="square" data-coordinate="6,10"></div>
+	<div class="square" data-coordinate="7,10"></div>
+	<div class="square" data-coordinate="8,10"></div>
+	<div class="square" data-coordinate="9,10"></div>
+	<div class="square" data-coordinate="10,10"></div>
+</div>
+`;
+
 class Board {
 	function() {
 		let self;		
@@ -86,8 +239,8 @@ class Board {
 		for(let i = 0; i < axisY.length; i++) {
 			for(let j = 0; j < axisX.length; j++) {
 				self.matrix.push([axisY[j], axisX[i]]); /* push to main matrix */
-				self.matrixHorizontal.push([axisY[j], axisX[i]]); /* push coordinates to alt matrixes */
-				self.matrixVertical.push([axisY[i], axisX[j]]); /* push coordinates to alt matrixes */
+				self.matrixHorizontal.push([axisY[j], axisX[i]]); /* push coordinates to oriented matrixes */
+				self.matrixVertical.push([axisY[i], axisX[j]]); /* push coordinates to oriented matrixes */
 				translate.push(String.fromCharCode(97+axisY[j]) + axisX[i]); /* push possible numer-letter combinations to array */
 				translate.push(axisX[i] + String.fromCharCode(97+axisY[j])); /* push possible numer-letter combinations to array */
 			}
@@ -118,21 +271,21 @@ class Board {
 			thisShip = shipChangeEvent.target;
 		}
 		self.rotateshipInDOM.addEventListener('click', function() {
-			self.matrixOrientation == self.matrixHorizontal ? self.matrixOrientation = self.matrixVertical : self.matrixOrientation = self.matrixHorizontal
+			self.matrixOrientation === self.matrixHorizontal ? self.matrixOrientation = self.matrixVertical : self.matrixOrientation = self.matrixHorizontal
 		});
 		self.pointsInDOM.forEach((pointInDOM) => {
 			let temporaryShipCoordinates = [];
-			var x;
-			var y;
+			let x;
+			let y;
 			function hoverShipOverBoard(uniqueFunction) {
 				for (let i = 0;i < shipSizer;i++) {
-					if (self.matrixOrientation == self.matrixHorizontal) {
+					if (self.matrixOrientation === self.matrixHorizontal) {
 						x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
 						y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
 						if (typeof uniqueFunction === "function") {
 							uniqueFunction();
 						}
-					} else if (self.matrixOrientation == self.matrixVertical) {
+					} else if (self.matrixOrientation === self.matrixVertical) {
 						x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
 						y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
 						if (typeof uniqueFunction === "function") {
@@ -222,26 +375,28 @@ var piecesHarbor = {
 var translate = []; /* array that will contain all the possible call-out coordinates, mapped to their real-matrix coordinates */
 
 class Piece {
+	function() {
+		let self;		
+	}
+
 	constructor(points, name) {
-		var min = 2;
-		var max = 5;
-		this.hits = []; /* the successful hits on the piece */
-		this.points = points; /* the coordinates of the piece on the board */
-		this.name = name;
-		this.alive = true; /* when all points have been hit, this will be false */
+		self.hits = []; /* the successful hits on the piece */
+		self.points = points; /* the coordinates of the piece on the board */
+		self.name = name;
+		self.alive = true; /* when all points have been hit, this will be false */
 	}
 
 	hit(coordinate) {
-		if (translate.includes(this.points)) {
-			if (this.points.includes(coordinate)) {
-				this.hits.push(coordinate);
+		if (translate.includes(self.points)) {
+			if (self.points.includes(coordinate)) {
+				self.hits.push(coordinate);
 				console.log('you hit me!');
 				document.querySelectorAll('.board [data-coordinate="'+ coordinate +'"]').forEach((point) => {
 					point.setAttribute('data-hit', true);
 				});
-				if (this.hits.sort().toString() == this.points.sort().toString()) {
-					this.alive = false;
-					console.log('you sunk my ' + this.name);
+				if (self.hits.sort().toString() == self.points.sort().toString()) {
+					self.alive = false;
+					console.log('you sunk my ' + self.name);
 				}
 			} else {
 				console.log('missed me!');
@@ -252,9 +407,68 @@ class Piece {
 	}
 }
 
+class Player {
+	function() {
+		let self;		
+	}
+
+	constructor(name) {
+		self = this;
+		self.name = name;
+		console.log(self.name);
+		self.board = new Board(document.querySelector('#app .board.player.'+self.name));
+		self.opponentBoard = document.querySelector('#app .board.opponent.'+self.name);
+	}
+}
 
 // initialize game
 
+var app = document.getElementById('app');
+
 var gridmaxglobal = 10;
 
-var player1Board = new Board(document.querySelector('#app .board.player'));
+var player1 = new Player('player1');
+// var player2 = new Player('player2');
+
+
+var players = [player1];
+
+players.forEach((player) => {
+	// Generate opponent board to be used as a reference of hits and misses
+	let playerOpponentBoard = document.createElement('div');
+	playerOpponentBoard.classList.add('board','opponent',player.name);
+	let playerOpponentBoardLegendPointsNumbersTemplate = ``;
+	let playerOpponentBoardLegendPointsLettersTemplate = ``;
+	// generate the gameboard coordinates
+	for(let i = 1; i <= gridmaxglobal; i++) {
+		playerOpponentBoardLegendPointsNumbersTemplate += '<div class="point">'+ i +'</div>';
+		playerOpponentBoardLegendPointsLettersTemplate += '<div class="point">'+ String.fromCharCode(96+i) +'</div>';
+	}
+	let playerOpponentBoardLegendTemplate = `
+		<div class="legend axis-x">
+			`+ playerOpponentBoardLegendPointsNumbersTemplate +`
+		</div>
+		<div class="legend axis-y">
+			`+ playerOpponentBoardLegendPointsLettersTemplate +`
+		</div>
+	`;
+	console.log(playerOpponentBoardLegendTemplate);
+	let playerOpponentBoardSquaresTemplate = ``;
+	let axisX = []; /* letters across the top of the board */
+	let axisY = []; /* numbers down the left side of the board */
+	for (let it = 0;it < self.gridmax;it++) {
+		axisY.push(it+1);
+		axisX.push(it+1);
+	}
+	for(let i = 0; i < axisY.length; i++) {
+		for(let j = 0; j < axisX.length; j++) {
+			playerOpponentBoardSquaresTemplate += '<div class="square" data-coordinate="'+ j +','+ i +'"></div>';
+		}
+	}
+	let playerOpponentBoardComplete = playerOpponentBoardLegendTemplate+playerOpponentBoardSquaresTemplate;
+	playerOpponentBoard.innerHTML = playerOpponentBoardComplete;
+	app.appendChild(playerOpponentBoard);
+
+	// Generate player board, to be used for placing ships and keeping track of hits and misses from opponent
+	
+});
