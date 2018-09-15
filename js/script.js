@@ -125,19 +125,19 @@ class Board {
 			let temporaryShipCoordinates = [];
 			var x;
 			var y;
-			function hoverShipOverBoard(callback) {
+			function hoverShipOverBoard(uniqueFunction) {
 				for (let i = 0;i < shipSizer;i++) {
 					if (self.matrixOrientation == self.matrixHorizontal) {
 						x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
 						y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
-						if (typeof callback === "function") {
-							callback();
+						if (typeof uniqueFunction === "function") {
+							uniqueFunction();
 						}
 					} else if (self.matrixOrientation == self.matrixVertical) {
 						x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
 						y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
-						if (typeof callback === "function") {
-							callback();
+						if (typeof uniqueFunction === "function") {
+							uniqueFunction();
 						}
 					}
 				}
@@ -145,16 +145,15 @@ class Board {
 			function mouseIn(event) {
 				// reset temporaryShipCoordinates
 				temporaryShipCoordinates = [];
-				// POSSIBLE DUPLICATION
 				hoverShipOverBoard(() => {
 					temporaryShipCoordinates.push([x,y]);
 				});
 				temporaryShipCoordinates.forEach((point) => {
-					if (self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+					if (self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]') && self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
 						placementAllowed = false;
 					}
 				});
-				if (placementAllowed != false) {
+				if (placementAllowed !== false && self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]')) {
 					hoverShipOverBoard(() => {
 						self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').setAttribute('data-active', 'active');
 					});
@@ -163,23 +162,23 @@ class Board {
 			pointInDOM.addEventListener('mouseenter', mouseIn);
 			function mouseExit(event) {
 				event.target.removeAttribute('data-active');
-				// POSSIBLE DUPLICATION
-				hoverShipOverBoard(() => {
-					self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').removeAttribute('data-active');
-				});
-				temporaryShipCoordinates.forEach((point) => {
-					if (!self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
-						placementAllowed = true;
-					}
-				});
+				if (self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]')) {
+					hoverShipOverBoard(() => {
+						self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').removeAttribute('data-active');
+					});
+					temporaryShipCoordinates.forEach((point) => {
+						if (!self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+							placementAllowed = true;
+						}
+					});
+				}
 				// reset temporaryShipCoordinates
 				temporaryShipCoordinates = [];
 			}
 			pointInDOM.addEventListener('mouseout', mouseExit);
 			function pointInDOMClickHandler(event) {
-				// POSSIBLE DUPLICATION
 				hoverShipOverBoard();
-				if (!event.target.hasAttribute('data-save') && !self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').hasAttribute('data-save')) {
+				if (!event.target.hasAttribute('data-save') && self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]') && !self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').hasAttribute('data-save')) {
 					let savedShipPoints = [];
 					self.DOM.querySelectorAll('[data-active="active"]').forEach((activePoint) => {
 						self.occupiedMatrix.push(activePoint.attributes['data-coordinate'].nodeValue);
@@ -199,6 +198,13 @@ class Board {
 				pointInDOM.removeEventListener('mouseout', mouseExit);
 			}
 			pointInDOM.addEventListener('click', pointInDOMClickHandler);
+			if (self.pieces.length == self.shipsInDOM.length) {
+				pointInDOM.addEventListener('click', self.endSelectionProcess, {
+				  once: true,
+				  passive: true,
+				  capture: true
+				});
+			}	
 		});
 	}
 
