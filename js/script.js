@@ -28,7 +28,7 @@ x when the matrixOrientation is switched to vertical, the last column isn't allo
 x when the matrixOrientation is switched to horizontal, the last row takes on the hover, but the point and the siblings are also mirrored in the first row - fix this!
 x if you hover over a saved coordinate and then hover on a coordinate right below it (in vertical mode), placementAllowed remains false. we want it to be true in this case
 -----------------
-o seperate sequence of gameplay into individual parts:
+o seperate sequence of gameplay into individual parts (trigger each part of the sequence outside of class declarations):
 	x start game setup
 	o end game setup
 	o player 1 setup board
@@ -47,7 +47,7 @@ o seperate sequence of gameplay into individual parts:
 		- reveal both players' boards
 		- start a new game?
 o generate DOM rather than hard-coding it in index.html
-
+o move the ship placement sequencing out of the class Board declaration
 
 */
 
@@ -70,7 +70,6 @@ class Board {
 		self.matrixHorizontal = []; /* coordinates mapped from left to right, top to bottom */
 		self.matrixVertical = []; /* coordinates mapped from top to bottom, left to right */
 		self.matrixOrientation = self.matrixHorizontal; /* set the orientation for selecting coordinates of new ships */
-		self.occupiedMatrix = []; /* coordinates occupied by pieces */
 		
 		// START SELECTION PROCESS
 		self.startSelectionProcessInDOM = self.DOM.querySelector('#startselection');
@@ -181,7 +180,6 @@ class Board {
 				if (!event.target.hasAttribute('data-save') && self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]') && !self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').hasAttribute('data-save')) {
 					let savedShipPoints = [];
 					self.DOM.querySelectorAll('[data-active="active"]').forEach((activePoint) => {
-						self.occupiedMatrix.push(activePoint.attributes['data-coordinate'].nodeValue);
 						savedShipPoints.push(activePoint.attributes['data-coordinate'].nodeValue);
 						activePoint.removeAttribute('data-active');
 						activePoint.setAttribute('data-save', 'saved');
@@ -209,16 +207,7 @@ class Board {
 	}
 
 	hit(coordinate) {
-		if (self.occupiedMatrix.includes(coordinate)) {
-			console.log('you hit a piece');
-		} else {
-			console.log('you missed me!');
-		}
 		// hit the board. if it hits a piece, trigger hit on piece. if misses a piece do nothing. then switch turns
-	}
-
-	constructBoard() {
-		// place the ships on the board without overlapping one another
 	}
 }
 
