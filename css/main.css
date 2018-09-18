@@ -108,3 +108,6 @@
 .ships .controls {
 	display: none;
 }
+.ships .controls[style="display:none;"] + .controls {
+	display: block;
+}

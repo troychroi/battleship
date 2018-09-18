@@ -46,21 +46,23 @@ o seperate sequence of gameplay into individual parts (trigger each part of the 
 				- player 2 wins
 		- reveal both players' boards
 		- start a new game?
-o generate DOM rather than hard-coding it in index.html
-o move the ship placement sequencing out of the class Board declaration
+x generate DOM rather than hard-coding it in index.html
+o move the ship placement sequencing out of the Board object declaration
 
 x use document.createElement to generate Board pointsInDom
-o convert Objects to strings for the templating in GENERATE BOARDS
+x convert Objects to strings for the templating in GENERATE BOARDS
+o sort out event handling for the added layer of abstraction
+	- Since everything is being consumed by Player object, move the logic and functionality into there. Or perhaps move it into a new function that’s like a giant switch case.. try it and see if it works.
+
+
+
 
 */
 
 class Board {
-	function() {
-		let self;		
-	}
 
 	constructor(DOM) {
-		self = this;
+		let self = this;
 		self.gridmax = gridmaxglobal;
 		self.DOM = DOM;
 		self.shipsInDOM = []; /* radio buttons in the DOM with attributes[name(ship),value(#-of-points),data-piece(type-of-ship)] */
@@ -68,16 +70,16 @@ class Board {
 			let ship = Object.entries(piecesHarbor)[i];
 			let shipKey = ship[0];
 			let shipValue = ship[1];
-			console.log(shipKey,shipValue);
-			let shipInDom = document.createElement('input');
-			shipInDom.setAttribute('name', 'ship');
-			shipInDom.setAttribute('value', shipValue);
-			shipInDom.setAttribute('data-piece', shipKey);
-			self.shipsInDOM.push(shipInDom);
+			let shipForDom = document.createElement('input');
+			shipForDom.setAttribute('name', 'ship');
+			shipForDom.setAttribute('type', 'radio');
+			shipForDom.setAttribute('value', shipValue);
+			shipForDom.setAttribute('data-piece', shipKey);
+			self.shipsInDOM.push(shipForDom);
 		}
-		console.log(self.shipsInDOM);
 		self.rotateshipInDOM = document.createElement('button');
 		self.rotateshipInDOM.setAttribute('data-rotate', 'rotateship');
+		self.rotateshipInDOM.innerHTML = 'Rotate Ship';
 		self.pieces = []; /* saved game pieces are pushed here */
 		self.pointsInDOM = [];
 		let axisX = []; /* numbers across the top of the board */
@@ -87,12 +89,19 @@ class Board {
 		self.matrixVertical = []; /* coordinates mapped from top to bottom, left to right */
 		self.matrixOrientation = self.matrixHorizontal; /* set the orientation for selecting coordinates of new ships */
 		
-		// START SELECTION PROCESS
 		self.startSelectionProcessInDOM = document.createElement('button');
-		self.startSelectionProcessInDOM.setAttribute('data-start', 'startselection');
-		self.startSelectionProcessInDOM.addEventListener('click', self.startSelectionProcess);
+		self.startSelectionProcessInDOM.setAttribute('data-start', 'startSelectionProcess');
 		self.startSelectionProcessInDOM.innerHTML = 'Start Selecting Ships';
-		// END SELECTION PROCESS
+
+		self.startSelectionProcessInDOM.addEventListener('click', self.startSelectionProcess);
+
+		// use this method to reconfigure the event listeners handlers
+		self.DOM.addEventListener('click', function(event){
+			if (event.target.hasAttribute('data-start')) {
+				console.log(event);
+				self.startSelectionProcess(event);
+			}
+		});
 
 		// create two arrays containing equal number of numbers based on gridmax, which is set by gridmaxglobal
 		for (let it = 0;it < self.gridmax;it++) {
@@ -119,14 +128,12 @@ class Board {
 				self.pointsInDOM.push(pointForDOM);
 			}
 		}
-
-
 	}
 
 	endSelectionProcess() {
-		self.startSelectionProcessInDOM.removeEventListener('click', self.startSelectionProcess);
-		if (self.pieces.length == self.shipsInDOM.length) {
-			self.pointsInDOM.forEach((pointInDOM) => {
+		this.startSelectionProcessInDOM.removeEventListener('click', this.startSelectionProcess);
+		if (this.pieces.length == this.shipsInDOM.length) {
+			this.pointsInDOM.forEach((pointInDOM) => {
 				pointInDOM.removeEventListener('click', pointInDOMClickHandler);
 				pointInDOM.removeEventListener('mouseenter', mouseIn);
 				pointInDOM.removeEventListener('mouseout', mouseExit);
@@ -134,9 +141,17 @@ class Board {
 		}
 	}
 	startSelectionProcess(event) {
+		console.log(this);
+		// remap elements here
+		// let shipsInDOM = Array.from(event.target.nextElementSibling.children[1].children).filter((element) => {return element.localName === 'input'})
+		// let rotateshipInDOM = event.target.nextElementSibling.children[2];
+
 		event.target.style.display = 'none';
-		self.DOM.querySelector('.ships .controls').style.display = 'block';
-		self.shipsInDOM.forEach((ship) => {
+		event.target.nextElementSibling.style.display = 'block';
+		this.shipsInDOM.forEach((ship) => {
+			ship.addEventListener('change', setFromSelection);
+		});
+		this.shipsInDOM.forEach((ship) => {
 			ship.addEventListener('change', setFromSelection);
 		});
 		let shipSizer = 0;
@@ -146,22 +161,23 @@ class Board {
 			shipSizer = shipChangeEvent.target.value;
 			thisShip = shipChangeEvent.target;
 		}
-		self.rotateshipInDOM.addEventListener('click', function() {
-			self.matrixOrientation === self.matrixHorizontal ? self.matrixOrientation = self.matrixVertical : self.matrixOrientation = self.matrixHorizontal
+		this.rotateshipInDOM.addEventListener('click', function() {
+			this.matrixOrientation === this.matrixHorizontal ? this.matrixOrientation = this.matrixVertical : this.matrixOrientation = this.matrixHorizontal
 		});
-		self.pointsInDOM.forEach((pointInDOM) => {
+		this.pointsInDOM.forEach((pointInDOM) => {
+			console.log(pointInDOM);
 			let temporaryShipCoordinates = [];
 			let x;
 			let y;
 			function hoverShipOverBoard(uniqueFunction) {
 				for (let i = 0;i < shipSizer;i++) {
-					if (self.matrixOrientation === self.matrixHorizontal) {
+					if (this.matrixOrientation === this.matrixHorizontal) {
 						x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
 						y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
 						if (typeof uniqueFunction === "function") {
 							uniqueFunction();
 						}
-					} else if (self.matrixOrientation === self.matrixVertical) {
+					} else if (this.matrixOrientation === this.matrixVertical) {
 						x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
 						y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
 						if (typeof uniqueFunction === "function") {
@@ -177,25 +193,25 @@ class Board {
 					temporaryShipCoordinates.push([x,y]);
 				});
 				temporaryShipCoordinates.forEach((point) => {
-					if (self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]') && self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+					if (this.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]') && this.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
 						placementAllowed = false;
 					}
 				});
-				if (placementAllowed !== false && self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]')) {
+				if (placementAllowed !== false && this.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]')) {
 					hoverShipOverBoard(() => {
-						self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').setAttribute('data-active', 'active');
+						this.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').setAttribute('data-active', 'active');
 					});
 				}
 			}
 			pointInDOM.addEventListener('mouseenter', mouseIn);
 			function mouseExit(event) {
 				event.target.removeAttribute('data-active');
-				if (self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]')) {
+				if (this.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]')) {
 					hoverShipOverBoard(() => {
-						self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').removeAttribute('data-active');
+						this.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').removeAttribute('data-active');
 					});
 					temporaryShipCoordinates.forEach((point) => {
-						if (!self.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+						if (!this.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
 							placementAllowed = true;
 						}
 					});
@@ -206,9 +222,9 @@ class Board {
 			pointInDOM.addEventListener('mouseout', mouseExit);
 			function pointInDOMClickHandler(event) {
 				hoverShipOverBoard();
-				if (!event.target.hasAttribute('data-save') && self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]') && !self.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').hasAttribute('data-save')) {
+				if (!event.target.hasAttribute('data-save') && this.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]') && !this.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').hasAttribute('data-save')) {
 					let savedShipPoints = [];
-					self.DOM.querySelectorAll('[data-active="active"]').forEach((activePoint) => {
+					this.DOM.querySelectorAll('[data-active="active"]').forEach((activePoint) => {
 						savedShipPoints.push(activePoint.attributes['data-coordinate'].nodeValue);
 						activePoint.removeAttribute('data-active');
 						activePoint.setAttribute('data-save', 'saved');
@@ -219,14 +235,14 @@ class Board {
 					thisShip.removeEventListener('change', setFromSelection);
 					shipSizer = 0;
 					let newPiece = new Piece(savedShipPoints, thisShip.attributes['data-piece'].nodeValue);
-					self.pieces.push(newPiece);
+					this.pieces.push(newPiece);
 				}
 				pointInDOM.removeEventListener('mouseenter', mouseIn);
 				pointInDOM.removeEventListener('mouseout', mouseExit);
 			}
 			pointInDOM.addEventListener('click', pointInDOMClickHandler);
-			if (self.pieces.length == self.shipsInDOM.length) {
-				pointInDOM.addEventListener('click', self.endSelectionProcess, {
+			if (this.pieces.length == this.shipsInDOM.length) {
+				pointInDOM.addEventListener('click', this.endSelectionProcess, {
 				  once: true,
 				  passive: true,
 				  capture: true
@@ -251,11 +267,9 @@ var piecesHarbor = {
 var translate = []; /* array that will contain all the possible call-out coordinates, mapped to their real-matrix coordinates */
 
 class Piece {
-	function() {
-		let self;		
-	}
 
 	constructor(points, name) {
+		let self = this;
 		self.hits = []; /* the successful hits on the piece */
 		self.points = points; /* the coordinates of the piece on the board */
 		self.name = name;
@@ -291,9 +305,13 @@ class Player {
 	constructor(name) {
 		self = this;
 		self.name = name;
-		console.log(self.name);
-		self.board = new Board(document.querySelector('#app .board.player.'+self.name));
-		self.opponentBoard = document.querySelector('#app .board.opponent.'+self.name);
+
+		self.playerOpponentBoard = document.createElement('div');
+		self.playerOpponentBoard.classList.add('board','opponent',self.name);
+
+		self.playerOwnBoard = document.createElement('div');
+		self.playerOwnBoard.classList.add('board','player',self.name);
+		self.board = new Board(self.playerOwnBoard);
 	}
 }
 
@@ -312,9 +330,10 @@ var players = [player1, player2];
 // GENERATE BOARDS
 
 players.forEach((player) => {
+	console.log(player);
+	player.board.startSelectionProcessInDOM.addEventListener('click', player.board.startSelectionProcess);
+
 	// Generate opponent board to be used as a reference of hits and misses
-	let playerOpponentBoard = document.createElement('div');
-	playerOpponentBoard.classList.add('board','opponent',player.name);
 	let playerOpponentBoardLegendPointsNumbersTemplate = ``;
 	let playerOpponentBoardLegendPointsLettersTemplate = ``;
 	// generate the gameboard coordinates
@@ -330,7 +349,6 @@ players.forEach((player) => {
 			`+ playerOpponentBoardLegendPointsLettersTemplate +`
 		</div>
 	`;
-	console.log(playerOpponentBoardLegendTemplate);
 	let playerOpponentBoardSquaresTemplate = ``;
 	let axisX = []; /* numbers across the top of the board */
 	let axisY = []; /* letters down the left side of the board */
@@ -344,21 +362,19 @@ players.forEach((player) => {
 		}
 	}
 	let playerOpponentBoardComplete = playerOpponentBoardLegendTemplate+playerOpponentBoardSquaresTemplate;
-	playerOpponentBoard.innerHTML = playerOpponentBoardComplete;
+	player.playerOpponentBoard.innerHTML = playerOpponentBoardComplete;
 
 	// Generate player board, to be used for placing ships and keeping track of hits and misses from opponent
 
-	let playerOwnBoard = document.createElement('div');
-	playerOwnBoard.classList.add('board','player',player.name);
+	let playerOwnBoard = player.playerOwnBoard;
 	let shipsInDOMTemplate = ``;
 	player.board.shipsInDOM.forEach((ship) => {
 		let stars = '';
 		for(let i = 0; i < ship.attributes['value'].nodeValue; i++) {
 			stars += '*';
 		}
-		shipsInDOMTemplate += ship.outerHTML + '<label>' + stars + '</label';
+		shipsInDOMTemplate += ship.outerHTML + '<label>' + stars + '</label>';
 	});
-	console.log(shipsInDOMTemplate);
 	let playerOwnBoardShipsTemplate = `
 		<div class="ships">
 			`+ player.board.startSelectionProcessInDOM.outerHTML +`
@@ -393,7 +409,6 @@ players.forEach((player) => {
 
 	let playerOwnBoardComplete = playerOwnBoardLegendTemplate+playerOwnBoardShipsTemplate+playerOwnBoardSquaresTemplate;
 	playerOwnBoard.innerHTML = playerOwnBoardComplete;
-	console.log(playerOpponentBoard, playerOwnBoard);
-	app.appendChild(playerOpponentBoard);
-	app.appendChild(playerOwnBoard);
+	app.appendChild(player.playerOpponentBoard);
+	app.appendChild(player.playerOwnBoard);
 });
