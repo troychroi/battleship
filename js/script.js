@@ -53,8 +53,8 @@ x use document.createElement to generate Board pointsInDom
 x convert Objects to strings for the templating in GENERATE BOARDS
 o sort out event handling for the added layer of abstraction
 	- Since everything is being consumed by Player object, move the logic and functionality into there. Or perhaps move it into a new function that’s like a giant switch case.. try it and see if it works.
-
-
+o opponent board isn't populating with squares... hmmm...
+o move mouseIn and mouseOut outside of the forEach loop... it seems wrong to define these multiple times
 
 
 */
@@ -66,22 +66,26 @@ class Board {
 		self.gridmax = gridmaxglobal;
 		self.DOM = DOM;
 		self.shipsInDOM = []; /* radio buttons in the DOM with attributes[name(ship),value(#-of-points),data-piece(type-of-ship)] */
-		for (let i = 0; i < Object.keys(piecesHarbor).length; i++) {
-			let ship = Object.entries(piecesHarbor)[i];
-			let shipKey = ship[0];
-			let shipValue = ship[1];
-			let shipForDom = document.createElement('input');
-			shipForDom.setAttribute('name', 'ship');
-			shipForDom.setAttribute('type', 'radio');
-			shipForDom.setAttribute('value', shipValue);
-			shipForDom.setAttribute('data-piece', shipKey);
-			self.shipsInDOM.push(shipForDom);
-		}
-		self.rotateshipInDOM = document.createElement('button');
-		self.rotateshipInDOM.setAttribute('data-rotate', 'rotateship');
-		self.rotateshipInDOM.innerHTML = 'Rotate Ship';
+		self.DOM.querySelectorAll('[name="ship"]').forEach((ship) => {
+			self.shipsInDOM.push(ship);
+		});
+		// for (let i = 0; i < Object.keys(piecesHarbor).length; i++) {
+		// 	let ship = Object.entries(piecesHarbor)[i];
+		// 	let shipKey = ship[0];
+		// 	let shipValue = ship[1];
+		// 	let shipForDom = document.createElement('input');
+		// 	shipForDom.setAttribute('name', 'ship');
+		// 	shipForDom.setAttribute('type', 'radio');
+		// 	shipForDom.setAttribute('value', shipValue);
+		// 	shipForDom.setAttribute('data-piece', shipKey);
+		// 	self.shipsInDOM.push(shipForDom);
+		// }
+		self.rotateshipInDOM = self.DOM.querySelector('[data-rotate]');
+		// self.rotateshipInDOM = document.createElement('button');
+		// self.rotateshipInDOM.setAttribute('data-rotate', 'rotateship');
+		// self.rotateshipInDOM.innerHTML = 'Rotate Ship';
 		self.pieces = []; /* saved game pieces are pushed here */
-		self.pointsInDOM = [];
+		self.pointsInDOM = DOM.querySelectorAll('.square');
 		let axisX = []; /* numbers across the top of the board */
 		let axisY = []; /* letters down the left side of the board */
 		self.matrix = []; /* all available coordinates where shipsInDOM can be placed */
@@ -89,19 +93,12 @@ class Board {
 		self.matrixVertical = []; /* coordinates mapped from top to bottom, left to right */
 		self.matrixOrientation = self.matrixHorizontal; /* set the orientation for selecting coordinates of new ships */
 		
-		self.startSelectionProcessInDOM = document.createElement('button');
-		self.startSelectionProcessInDOM.setAttribute('data-start', 'startSelectionProcess');
-		self.startSelectionProcessInDOM.innerHTML = 'Start Selecting Ships';
+		self.startSelectionProcessInDOM = self.DOM.querySelector('[data-start]');
+		// self.startSelectionProcessInDOM = document.createElement('button');
+		// self.startSelectionProcessInDOM.setAttribute('data-start', 'startSelectionProcess');
+		// self.startSelectionProcessInDOM.innerHTML = 'Start Selecting Ships';
 
 		self.startSelectionProcessInDOM.addEventListener('click', self.startSelectionProcess);
-
-		// use this method to reconfigure the event listeners handlers
-		self.DOM.addEventListener('click', function(event){
-			if (event.target.hasAttribute('data-start')) {
-				console.log(event);
-				self.startSelectionProcess(event);
-			}
-		});
 
 		// create two arrays containing equal number of numbers based on gridmax, which is set by gridmaxglobal
 		for (let it = 0;it < self.gridmax;it++) {
@@ -119,21 +116,12 @@ class Board {
 				translate.push(axisX[i] + String.fromCharCode(97+axisY[j])); /* push possible numer-letter combinations to array */
 			}
 		}
-
-		for(let i = 0; i < axisY.length; i++) {
-			for(let j = 0; j < axisX.length; j++) {
-				let pointForDOM = document.createElement('div');
-				pointForDOM.classList.add('square');
-				pointForDOM.setAttribute('data-coordinate', j +','+ i);
-				self.pointsInDOM.push(pointForDOM);
-			}
-		}
 	}
 
 	endSelectionProcess() {
-		this.startSelectionProcessInDOM.removeEventListener('click', this.startSelectionProcess);
-		if (this.pieces.length == this.shipsInDOM.length) {
-			this.pointsInDOM.forEach((pointInDOM) => {
+		self.board.startSelectionProcessInDOM.removeEventListener('click', self.board.startSelectionProcess);
+		if (self.board.pieces.length == self.board.shipsInDOM.length) {
+			self.board.pointsInDOM.forEach((pointInDOM) => {
 				pointInDOM.removeEventListener('click', pointInDOMClickHandler);
 				pointInDOM.removeEventListener('mouseenter', mouseIn);
 				pointInDOM.removeEventListener('mouseout', mouseExit);
@@ -141,17 +129,13 @@ class Board {
 		}
 	}
 	startSelectionProcess(event) {
-		console.log(this);
-		// remap elements here
-		// let shipsInDOM = Array.from(event.target.nextElementSibling.children[1].children).filter((element) => {return element.localName === 'input'})
-		// let rotateshipInDOM = event.target.nextElementSibling.children[2];
-
+		console.log(self.board);
 		event.target.style.display = 'none';
 		event.target.nextElementSibling.style.display = 'block';
-		this.shipsInDOM.forEach((ship) => {
+		self.board.shipsInDOM.forEach((ship) => {
 			ship.addEventListener('change', setFromSelection);
 		});
-		this.shipsInDOM.forEach((ship) => {
+		self.board.shipsInDOM.forEach((ship) => {
 			ship.addEventListener('change', setFromSelection);
 		});
 		let shipSizer = 0;
@@ -161,23 +145,22 @@ class Board {
 			shipSizer = shipChangeEvent.target.value;
 			thisShip = shipChangeEvent.target;
 		}
-		this.rotateshipInDOM.addEventListener('click', function() {
-			this.matrixOrientation === this.matrixHorizontal ? this.matrixOrientation = this.matrixVertical : this.matrixOrientation = this.matrixHorizontal
+		self.board.rotateshipInDOM.addEventListener('click', function() {
+			self.board.matrixOrientation === self.board.matrixHorizontal ? self.board.matrixOrientation = self.board.matrixVertical : self.board.matrixOrientation = self.board.matrixHorizontal
 		});
-		this.pointsInDOM.forEach((pointInDOM) => {
-			console.log(pointInDOM);
+		self.board.pointsInDOM.forEach((pointInDOM) => {
 			let temporaryShipCoordinates = [];
 			let x;
 			let y;
 			function hoverShipOverBoard(uniqueFunction) {
 				for (let i = 0;i < shipSizer;i++) {
-					if (this.matrixOrientation === this.matrixHorizontal) {
+					if (self.board.matrixOrientation === self.board.matrixHorizontal) {
 						x = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
 						y = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
 						if (typeof uniqueFunction === "function") {
 							uniqueFunction();
 						}
-					} else if (this.matrixOrientation === this.matrixVertical) {
+					} else if (self.board.matrixOrientation === self.board.matrixVertical) {
 						x = parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[0]);
 						y = i+parseInt(pointInDOM.attributes['data-coordinate'].nodeValue.split(',')[1]);
 						if (typeof uniqueFunction === "function") {
@@ -193,25 +176,25 @@ class Board {
 					temporaryShipCoordinates.push([x,y]);
 				});
 				temporaryShipCoordinates.forEach((point) => {
-					if (this.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]') && this.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+					if (self.board.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]') && self.board.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
 						placementAllowed = false;
 					}
 				});
-				if (placementAllowed !== false && this.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]')) {
+				if (placementAllowed !== false && self.board.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]')) {
 					hoverShipOverBoard(() => {
-						this.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').setAttribute('data-active', 'active');
+						self.board.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').setAttribute('data-active', 'active');
 					});
 				}
 			}
 			pointInDOM.addEventListener('mouseenter', mouseIn);
 			function mouseExit(event) {
 				event.target.removeAttribute('data-active');
-				if (this.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]')) {
+				if (self.board.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]')) {
 					hoverShipOverBoard(() => {
-						this.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').removeAttribute('data-active');
+						self.board.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').removeAttribute('data-active');
 					});
 					temporaryShipCoordinates.forEach((point) => {
-						if (!this.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
+						if (!self.board.DOM.querySelector('[data-coordinate="'+ point[0] +','+ point[1] +'"]').hasAttribute('data-save')) {
 							placementAllowed = true;
 						}
 					});
@@ -222,9 +205,9 @@ class Board {
 			pointInDOM.addEventListener('mouseout', mouseExit);
 			function pointInDOMClickHandler(event) {
 				hoverShipOverBoard();
-				if (!event.target.hasAttribute('data-save') && this.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]') && !this.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').hasAttribute('data-save')) {
+				if (!event.target.hasAttribute('data-save') && self.board.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]') && !self.board.DOM.querySelector('[data-coordinate="'+ x +','+ y +'"]').hasAttribute('data-save')) {
 					let savedShipPoints = [];
-					this.DOM.querySelectorAll('[data-active="active"]').forEach((activePoint) => {
+					self.board.DOM.querySelectorAll('[data-active="active"]').forEach((activePoint) => {
 						savedShipPoints.push(activePoint.attributes['data-coordinate'].nodeValue);
 						activePoint.removeAttribute('data-active');
 						activePoint.setAttribute('data-save', 'saved');
@@ -235,14 +218,14 @@ class Board {
 					thisShip.removeEventListener('change', setFromSelection);
 					shipSizer = 0;
 					let newPiece = new Piece(savedShipPoints, thisShip.attributes['data-piece'].nodeValue);
-					this.pieces.push(newPiece);
+					self.board.pieces.push(newPiece);
 				}
 				pointInDOM.removeEventListener('mouseenter', mouseIn);
 				pointInDOM.removeEventListener('mouseout', mouseExit);
 			}
 			pointInDOM.addEventListener('click', pointInDOMClickHandler);
-			if (this.pieces.length == this.shipsInDOM.length) {
-				pointInDOM.addEventListener('click', this.endSelectionProcess, {
+			if (self.board.pieces.length == self.board.shipsInDOM.length) {
+				pointInDOM.addEventListener('click', self.board.endSelectionProcess, {
 				  once: true,
 				  passive: true,
 				  capture: true
@@ -306,11 +289,9 @@ class Player {
 		self = this;
 		self.name = name;
 
-		self.playerOpponentBoard = document.createElement('div');
-		self.playerOpponentBoard.classList.add('board','opponent',self.name);
+		self.playerOpponentBoard = document.querySelector('.board.opponent.'+self.name);
 
-		self.playerOwnBoard = document.createElement('div');
-		self.playerOwnBoard.classList.add('board','player',self.name);
+		self.playerOwnBoard = document.querySelector('.board.player.'+self.name);
 		self.board = new Board(self.playerOwnBoard);
 	}
 }
@@ -329,86 +310,87 @@ var players = [player1, player2];
 
 // GENERATE BOARDS
 
-players.forEach((player) => {
-	console.log(player);
-	player.board.startSelectionProcessInDOM.addEventListener('click', player.board.startSelectionProcess);
 
-	// Generate opponent board to be used as a reference of hits and misses
-	let playerOpponentBoardLegendPointsNumbersTemplate = ``;
-	let playerOpponentBoardLegendPointsLettersTemplate = ``;
-	// generate the gameboard coordinates
-	for(let i = 1; i <= gridmaxglobal; i++) {
-		playerOpponentBoardLegendPointsNumbersTemplate += '<div class="point">'+ i +'</div>';
-		playerOpponentBoardLegendPointsLettersTemplate += '<div class="point">'+ String.fromCharCode(96+i) +'</div>';
-	}
-	let playerOpponentBoardLegendTemplate = `
-		<div class="legend axis-x">
-			`+ playerOpponentBoardLegendPointsNumbersTemplate +`
-		</div>
-		<div class="legend axis-y">
-			`+ playerOpponentBoardLegendPointsLettersTemplate +`
-		</div>
-	`;
-	let playerOpponentBoardSquaresTemplate = ``;
-	let axisX = []; /* numbers across the top of the board */
-	let axisY = []; /* letters down the left side of the board */
-	for (let it = 0;it < self.gridmax;it++) {
-		axisY.push(it+1);
-		axisX.push(it+1);
-	}
-	for(let i = 0; i < axisY.length; i++) {
-		for(let j = 0; j < axisX.length; j++) {
-			playerOpponentBoardSquaresTemplate += '<div class="square" data-coordinate="'+ j +','+ i +'"></div>';
-		}
-	}
-	let playerOpponentBoardComplete = playerOpponentBoardLegendTemplate+playerOpponentBoardSquaresTemplate;
-	player.playerOpponentBoard.innerHTML = playerOpponentBoardComplete;
+// players.forEach((player) => {
+// 	console.log(player);
 
-	// Generate player board, to be used for placing ships and keeping track of hits and misses from opponent
+// 	// Generate opponent board to be used as a reference of hits and misses
+// 	let playerOpponentBoardLegendPointsNumbersTemplate = ``;
+// 	let playerOpponentBoardLegendPointsLettersTemplate = ``;
+// 	// generate the gameboard coordinates
+// 	for(let i = 1; i <= gridmaxglobal; i++) {
+// 		playerOpponentBoardLegendPointsNumbersTemplate += '<div class="point">'+ i +'</div>';
+// 		playerOpponentBoardLegendPointsLettersTemplate += '<div class="point">'+ String.fromCharCode(96+i) +'</div>';
+// 	}
+// 	let playerOpponentBoardLegendTemplate = `
+// 		<div class="legend axis-x">
+// 			`+ playerOpponentBoardLegendPointsNumbersTemplate +`
+// 		</div>
+// 		<div class="legend axis-y">
+// 			`+ playerOpponentBoardLegendPointsLettersTemplate +`
+// 		</div>
+// 	`;
+// 	let playerOpponentBoardSquaresTemplate = ``;
+// 	let axisX = []; /* numbers across the top of the board */
+// 	let axisY = []; /* letters down the left side of the board */
+// 	for (let it = 0;it < self.gridmax;it++) {
+// 		axisY.push(it+1);
+// 		axisX.push(it+1);
+// 	}
+// 	for(let i = 0; i < axisY.length; i++) {
+// 		for(let j = 0; j < axisX.length; j++) {
+// 			playerOpponentBoardSquaresTemplate += '<div class="square" data-coordinate="'+ j +','+ i +'"></div>';
+// 		}
+// 	}
+// 	let playerOpponentBoardComplete = playerOpponentBoardLegendTemplate+playerOpponentBoardSquaresTemplate;
+// 	player.playerOpponentBoard.innerHTML = playerOpponentBoardComplete;
 
-	let playerOwnBoard = player.playerOwnBoard;
-	let shipsInDOMTemplate = ``;
-	player.board.shipsInDOM.forEach((ship) => {
-		let stars = '';
-		for(let i = 0; i < ship.attributes['value'].nodeValue; i++) {
-			stars += '*';
-		}
-		shipsInDOMTemplate += ship.outerHTML + '<label>' + stars + '</label>';
-	});
-	let playerOwnBoardShipsTemplate = `
-		<div class="ships">
-			`+ player.board.startSelectionProcessInDOM.outerHTML +`
-			<div class="controls">
-				<h2>Your Ships</h2>
-				<fieldset>
-					`+ shipsInDOMTemplate +`
-				</fieldset>
-				`+ player.board.rotateshipInDOM.outerHTML +`
-			</div>
-		</div>	
-	`;
-	let playerOwnBoardLegendPointsNumbersTemplate = ``;
-	let playerOwnBoardLegendPointsLettersTemplate = ``;
-	// generate the gameboard coordinates
-	for(let i = 1; i <= gridmaxglobal; i++) {
-		playerOwnBoardLegendPointsNumbersTemplate += '<div class="point">'+ i +'</div>';
-		playerOwnBoardLegendPointsLettersTemplate += '<div class="point">'+ String.fromCharCode(96+i) +'</div>';
-	}
-	let playerOwnBoardSquaresTemplate = '';
-	player.board.pointsInDOM.forEach((point) => {
-		playerOwnBoardSquaresTemplate += point.outerHTML;
-	});
-	let playerOwnBoardLegendTemplate = `
-		<div class="legend axis-x">
-			`+ playerOwnBoardLegendPointsNumbersTemplate +`
-		</div>
-		<div class="legend axis-y">
-			`+ playerOwnBoardLegendPointsLettersTemplate +`
-		</div>
-	`;
+// 	// Generate player board, to be used for placing ships and keeping track of hits and misses from opponent
 
-	let playerOwnBoardComplete = playerOwnBoardLegendTemplate+playerOwnBoardShipsTemplate+playerOwnBoardSquaresTemplate;
-	playerOwnBoard.innerHTML = playerOwnBoardComplete;
-	app.appendChild(player.playerOpponentBoard);
-	app.appendChild(player.playerOwnBoard);
-});
+// 	let playerOwnBoard = player.playerOwnBoard;
+// 	let shipsInDOMTemplate = ``;
+// 	player.board.shipsInDOM.forEach((ship) => {
+// 		let stars = '';
+// 		for(let i = 0; i < ship.attributes['value'].nodeValue; i++) {
+// 			stars += '*';
+// 		}
+// 		shipsInDOMTemplate += ship.outerHTML + '<label>' + stars + '</label>';
+// 	});
+// 	let playerOwnBoardShipsTemplate = `
+// 		<div class="ships">
+// 			`+ player.board.startSelectionProcessInDOM.outerHTML +`
+// 			<div class="controls">
+// 				<h2>Your Ships</h2>
+// 				<fieldset>
+// 					`+ shipsInDOMTemplate +`
+// 				</fieldset>
+// 				`+ player.board.rotateshipInDOM.outerHTML +`
+// 			</div>
+// 		</div>	
+// 	`;
+// 	let playerOwnBoardLegendPointsNumbersTemplate = ``;
+// 	let playerOwnBoardLegendPointsLettersTemplate = ``;
+// 	// generate the gameboard coordinates
+// 	for(let i = 1; i <= gridmaxglobal; i++) {
+// 		playerOwnBoardLegendPointsNumbersTemplate += '<div class="point">'+ i +'</div>';
+// 		playerOwnBoardLegendPointsLettersTemplate += '<div class="point">'+ String.fromCharCode(96+i) +'</div>';
+// 	}
+// 	let playerOwnBoardSquaresTemplate = '';
+// 	player.board.pointsInDOM.forEach((point) => {
+// 		playerOwnBoardSquaresTemplate += point.outerHTML;
+// 	});
+// 	let playerOwnBoardLegendTemplate = `
+// 		<div class="legend axis-x">
+// 			`+ playerOwnBoardLegendPointsNumbersTemplate +`
+// 		</div>
+// 		<div class="legend axis-y">
+// 			`+ playerOwnBoardLegendPointsLettersTemplate +`
+// 		</div>
+// 	`;
+
+// 	let playerOwnBoardComplete = playerOwnBoardLegendTemplate+playerOwnBoardShipsTemplate+playerOwnBoardSquaresTemplate;
+// 	playerOwnBoard.innerHTML = playerOwnBoardComplete;
+// 	console.log(playerOpponentBoardSquaresTemplate);
+// 	app.appendChild(player.playerOpponentBoard);
+// 	app.appendChild(player.playerOwnBoard);
+// });
